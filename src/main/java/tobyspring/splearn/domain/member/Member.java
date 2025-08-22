@@ -15,7 +15,7 @@ import static org.springframework.util.Assert.state;
 
 @Entity
 @Getter
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = "detail")
 /**
  * 생성자를 외부에서 못만들게 막는다. -> 정적 팩토리 메소드를 만들기 때문에.
  */
@@ -31,7 +31,7 @@ public class Member extends AbstractEntity {
 
     private MemberStatus status;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private MemberDetail detail;
 
     /**
@@ -70,7 +70,12 @@ public class Member extends AbstractEntity {
         member.email = new Email(createRequest.email());
         member.nickname = requireNonNull(createRequest.nickname());
         member.passwordHash = requireNonNull(passwordEncoder.encode(createRequest.password()));
+
         member.status = MemberStatus.PENDING;
+
+        member.detail = MemberDetail.create();
+
+
         return member;
     }
 
