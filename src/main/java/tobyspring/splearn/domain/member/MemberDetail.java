@@ -43,4 +43,9 @@ public class MemberDetail extends AbstractEntity {
         Assert.isTrue(deactivatedAt == null, "이미 deactivatedAt은 설정되었습니다.");
         this.deactivatedAt = LocalDateTime.now();
     }
+
+    public void updateInfo(MemberInfoUpdateRequest updateRequest) {
+        this.profile = new Profile(updateRequest.profileAddress());
+        this.introduction = updateRequest.introduction();
+    }
 }

@@ -3,6 +3,7 @@ package tobyspring.splearn.domain.member;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProfileTest {
@@ -21,6 +22,13 @@ class ProfileTest {
         assertThatThrownBy(() -> new Profile("")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Profile("A")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Profile("프로필")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void url(){
+        var profile = new Profile("tobyilee");
+
+        assertThat(profile.url()).isEqualTo("@tobyilee");
     }
 
 
