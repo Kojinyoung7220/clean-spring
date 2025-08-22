@@ -1,4 +1,4 @@
-package tobyspring.splearn.application.provided;
+package tobyspring.splearn.application.member.provided;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -6,12 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import tobyspring.splearn.SplearnTestConfiguration;
-import tobyspring.splearn.domain.Member;
-import tobyspring.splearn.domain.MemberFixture;
+import tobyspring.splearn.domain.member.Member;
+import tobyspring.splearn.domain.member.MemberFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest // jpa 테스트와는 달리 리포지토리에 주목해서 어떤 테스트를 수행하는 게 아니기 때문에 명시적으로 어떤 설정을 넣지 않으면 SQL이 보이지 않는다. -> yml파일에 설정
 @Transactional

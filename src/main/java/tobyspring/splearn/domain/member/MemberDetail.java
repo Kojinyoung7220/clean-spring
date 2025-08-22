@@ -1,10 +1,11 @@
-package tobyspring.splearn.domain;
+package tobyspring.splearn.domain.member;
 
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import tobyspring.splearn.domain.AbstractEntity;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @ToString(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberDetail extends AbstractEntity{
+public class MemberDetail extends AbstractEntity {
 
     private String profile;
 
