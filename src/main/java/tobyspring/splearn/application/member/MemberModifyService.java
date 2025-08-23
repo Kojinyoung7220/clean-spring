@@ -8,10 +8,7 @@ import tobyspring.splearn.application.member.provided.MemberFinder;
 import tobyspring.splearn.application.member.provided.MemberRegister;
 import tobyspring.splearn.application.member.required.EmailSender;
 import tobyspring.splearn.application.member.required.MemberRepository;
-import tobyspring.splearn.domain.member.DuplicateEmailException;
-import tobyspring.splearn.domain.member.Member;
-import tobyspring.splearn.domain.member.MemberRegisterRequest;
-import tobyspring.splearn.domain.member.PasswordEncoder;
+import tobyspring.splearn.domain.member.*;
 import tobyspring.splearn.domain.shared.Email;
 
 /**
@@ -57,7 +54,6 @@ public class MemberModifyService implements MemberRegister {
 
     @Override
     public Member activate(Long memberId) {
-
         Member member = memberFinder.find(memberId);
 
         member.activate();
@@ -66,7 +62,26 @@ public class MemberModifyService implements MemberRegister {
         //spring data는 jpa를 위해서 만들어진게 아니다. 그 외에도 거의 한 10개정도 되는 굉장히 다양한 종류의 데이터 저장 기술들
     }
 
-        private void sendWelcomeEmail(Member member) {
+    @Override
+    public Member deactivate(Long memberId) {
+        Member member = memberFinder.find(memberId);
+
+        member.deactivate();
+
+        return memberRepository.save(member);
+    }
+
+    @Override
+    public Member updateInfo(Long memberId, MemberInfoUpdateRequest memberInfoUpdateRequest) {
+        Member member = memberFinder.find(memberId);
+
+        member.updateInfo(memberInfoUpdateRequest);
+
+        return memberRepository.save(member);
+
+    }
+
+    private void sendWelcomeEmail(Member member) {
         emailSender.send(member.getEmail(), "등록을 완료해주세요", "아래 링크를 클릭해서 등록을 완료해주세요");
     }
 

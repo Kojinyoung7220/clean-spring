@@ -8,10 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import tobyspring.splearn.SplearnTestConfiguration;
 import tobyspring.splearn.domain.*;
-import tobyspring.splearn.domain.member.DuplicateEmailException;
-import tobyspring.splearn.domain.member.Member;
-import tobyspring.splearn.domain.member.MemberFixture;
-import tobyspring.splearn.domain.member.MemberRegisterRequest;
+import tobyspring.splearn.domain.member.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,26 +42,74 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
 
     @Test
     void activate(){
-        Member member = memberRegister.register(MemberFixture.createMemberRegisterRequest());
-        entityManager.flush();
-        entityManager.clear();
+        Member member = registerMember();
 
         member = memberRegister.activate(member.getId());
         entityManager.flush();
 
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
+        assertThat(member.getDetail().getActivatedAt()).isNotNull();
+
     }
 
     @Test
-    void memberRegisterRequestFail() {
+    void deactivate(){
+        Member member = registerMember();
 
-        checkValidation(new MemberRegisterRequest("tobyspring@gmail.com", "Toby", "longsecret"));
-        checkValidation(new MemberRegisterRequest("tobyspring@gmail.com", "Charlieeeeeeeeeeeeeeeeeeeeee", "longsecret"));
-        checkValidation(new MemberRegisterRequest("tobyspringgmail.com", "Toby", "longsecret"));
+        memberRegister.activate(member.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        member = memberRegister.deactivate(member.getId());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
+        assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
+    }
+
+    @Test
+    void update(){
+        Member member = registerMember();
+
+        memberRegister.activate(member.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        member = memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("jin123", "toby100", "자기소개"));
+
+        assertThat(member.getNickname()).isEqualTo("jin123");
+        assertThat(member.getDetail().getProfile().address()).isEqualTo("toby100");
+        assertThat(member.getDetail().getIntroduction()).isEqualTo("자기소개");
 
     }
 
-    private void checkValidation(MemberRegisterRequest invalid) {
+    private Member registerMember() {
+        Member member = memberRegister.register(MemberFixture.createMemberRegisterRequest());
+        entityManager.flush();
+        entityManager.clear();
+        return member;
+    }
+
+
+    @Test
+    void memberRegisterRequestFail() {
+        checkRegisterValidation(new MemberRegisterRequest("tobyspring@gmail.com", "Toby", "longsecret"));
+        checkRegisterValidation(new MemberRegisterRequest("tobyspring@gmail.com", "Charlieeeeeeeeeeeeeeeeeeeeee", "longsecret"));
+        checkRegisterValidation(new MemberRegisterRequest("tobyspringgmail.com", "Toby", "longsecret"));
+    }
+
+    private void checkRegisterValidation(MemberRegisterRequest invalid) {
         assertThatThrownBy(() ->  memberRegister.register(invalid)).isInstanceOf(ConstraintViolationException.class);
+    }
+
+
+    @Test
+    void memberInfoUpdateRequestFail(){
+        Member member = registerMember();
+        checkInfoUpdateValidation(member.getId(), new MemberInfoUpdateRequest("d", "toby100", "자기소개"));
+        checkInfoUpdateValidation(member.getId(), new MemberInfoUpdateRequest("jin123", null, "자기소개"));
+        checkInfoUpdateValidation(member.getId(), new MemberInfoUpdateRequest("jin123", "toby100", null));
+    }
+
+    private void checkInfoUpdateValidation(Long memberId, MemberInfoUpdateRequest invalid) {
+        assertThatThrownBy(() ->  memberRegister.updateInfo(memberId, invalid)).isInstanceOf(ConstraintViolationException.class);
     }
 }
