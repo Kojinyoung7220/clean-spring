@@ -19,6 +19,11 @@
 //import static org.mockito.ArgumentMatchers.any;
 //import static org.mockito.ArgumentMatchers.eq;
 //
+///**
+// * 스프링 프레임워크나 그런 지원 없이 필요한 스텁들, 목을 만들어서 테스트를 진행
+// * 하지만 이런 방법이 매우 번거로움.
+// * 그리고 sql을 검증해야되는 일도 있는데 이 방식은 쉽지 않음
+// */
 //class MemberRegisterManualTest {
 //
 //    @Test

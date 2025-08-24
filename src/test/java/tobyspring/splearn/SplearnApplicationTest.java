@@ -7,6 +7,9 @@ import org.springframework.boot.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * 테스트 커버리지를 맞추기 위한 run 메서드 테스트코드 작성
+ */
 class SplearnApplicationTest {
 
     @Test
