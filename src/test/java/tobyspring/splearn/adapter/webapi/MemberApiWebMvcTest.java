@@ -28,6 +28,10 @@ import static org.mockito.Mockito.when;
  * MockMvc를 사용하는게 스프링 6.1까지는 필수였지만
  * 6.2부터 MockMvcTester가 나왔다
  * MockMvcTester는 AssertJ가 접목이 돼 있다
+ *
+ *  에플리케이션 레이어부터 시작해서 후반부 작업이 안됐는데 API 개발을 미리 해두고 싶다.
+ *  혹은 뒤에 작업이 너무 복잡해서 쿼리도 되게 많고 연산도 많이 해야 되는 경우
+ *  (ex memberAPI에서 로그인, 인증관련 코드들을 집중적으로 테스트 하고 싶은 경우도 포함) 단위테스트 진행
  */
 @WebMvcTest(MemberApi.class)
 @RequiredArgsConstructor

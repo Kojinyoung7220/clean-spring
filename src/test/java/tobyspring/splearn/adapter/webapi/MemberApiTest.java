@@ -1,69 +1,70 @@
 package tobyspring.splearn.adapter.webapi;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpStatus;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import tobyspring.splearn.application.member.provided.MemberRegister;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.transaction.annotation.Transactional;
+import tobyspring.splearn.adapter.webapi.dto.MemberRegisterResponse;
+import tobyspring.splearn.application.member.required.MemberRepository;
+import tobyspring.splearn.domain.MemberStatus;
 import tobyspring.splearn.domain.member.Member;
 import tobyspring.splearn.domain.member.MemberFixture;
 import tobyspring.splearn.domain.member.MemberRegisterRequest;
 
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static tobyspring.splearn.AssertThatUtils.equalsTo;
+import static tobyspring.splearn.AssertThatUtils.notNull;
 
 /**
- * 8-41
- * webMvcTest 어노테이션은 JPA 테스트랑 비슷하게 지금 이 안에 존재하는 모든 스프링 빈을 다 올리지 않고,
- * 웹 파트를 담당하는 컨트롤러를 테스트하는데 필요로 하는 이것과 관련된 빈들만 딱 실행을 해준다.
+ * Transactional을 테스트 시 사용하면 위험한 경우
+ * 1. Requires_New를 사용한 경우
+ * 2. NESTED를 사용한 경우
+ * 이런 경우에는 새로 만든 트랜잭션은 롤백이 안된다 -> 명시적으로 새로만든 트랜잭션의 작업을 다 삭제해서 원래 상태로 돌려줘야 한다.
+ * 3. 애플리케이션 실행하는 중에 스레드를 하나 더 추가해서 백그라운드에서 새로운 트랜잭션을 만들어서 거기서 데이터 업테이트를 하는 경우(동시성을 직접 다루는 코드)
+ * 이런 경우도 내부의 DB작업은 트랜잭셔널로 롤백이 되지 않는다
  *
- * MockMvc를 사용하는게 스프링 6.1까지는 필수였지만
- * 6.2부터 MockMvcTester가 나왔다
- * MockMvcTester는 AssertJ가 접목이 돼 있다
+ * 일반적으로 이 테스트를 기본으로 만든다
+ *
  */
-@WebMvcTest(MemberApi.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
 @RequiredArgsConstructor
-class MemberApiTest {
+public class MemberApiTest {
     final MockMvcTester mvcTester;
     final ObjectMapper objectMapper;
+    final MemberRepository memberRepository;
 
-    @MockitoBean
-    MemberRegister memberRegister;
 
     @Test
-    void register() throws JsonProcessingException {
-        Member member = MemberFixture.createMember(1L);
-        when(memberRegister.register(any())).thenReturn(member);
-
+    void register() throws IOException {
         MemberRegisterRequest request = MemberFixture.createMemberRegisterRequest();
         String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(mvcTester.post().uri("/api/members")
+        MvcTestResult result = mvcTester.post().uri("/api/members")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
+                .content(requestJson).exchange();
+
+        assertThat(result)
                 .hasStatusOk()
                 .bodyJson()
-                .extractingPath("$.memberId").asNumber().isEqualTo(1);
+                .hasPathSatisfying("$.memberId", notNull())
+                .hasPathSatisfying("$.email", equalsTo(request));
 
-        verify(memberRegister).register(request);
-    }
+        MemberRegisterResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), MemberRegisterResponse.class);
+        Member member = memberRepository.findById(response.memberId()).orElseThrow();
 
-    @Test
-    void registerFail() throws JsonProcessingException {
-        MemberRegisterRequest request = MemberFixture.createMemberRegisterRequest("invalid email");
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        assertThat(mvcTester.post().uri("/api/members")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-                .hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(member.getEmail().address()).isEqualTo(request.email());
+        assertThat(member.getNickname()).isEqualTo(request.nickname());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.PENDING);
     }
 }
